@@ -67,6 +67,12 @@ export default {
             throw new Error(`${component} is not supported for ${Platform.OS} Platform`);
         }
     },
+    paymentMethodsResponseHandlerPromise(paymentMethodsResponse){
+        return AdyenPayment.paymentMethodsResponseHandlerPromise(paymentMethodsResponse);
+    },
+    dismiss(){
+        return AdyenPayment.dismiss();
+    },
     /**
      * @callback mOnSuccess
      * @param {Object} message

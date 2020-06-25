@@ -70,6 +70,7 @@ class AdyenPayment: RCTEventEmitter {
            AppServiceConfigData.app_url_headers = appServiceConfigData["additional_http_headers"] as! [String:String]
         }
         AppServiceConfigData.environment = appServiceConfigData["environment"] as! String
+        AppServiceConfigData.custom_api = appServiceConfigData["custom_api"] as! Bool
     }
     
     func storedPaymentMethod<T: StoredPaymentMethod>(ofType type: T.Type) -> T? {
@@ -207,7 +208,15 @@ class AdyenPayment: RCTEventEmitter {
         self.componentData = componentData
         self.component = component as String
         let request = PaymentMethodsRequest()
-        self.apiClient.perform(request, completionHandler: self.paymentMethodsResponseHandler)
+        AppServiceConfigData.custom_api ? self.resolve!(nil) : self.apiClient.perform(request, completionHandler: self.paymentMethodsResponseHandler)
+    }
+
+    @objc func paymentMethodsResponseHandlerPromise(_ response: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        self.resolve = resolve
+        self.reject = reject
+
+        self.paymentMethods = response["paymentMethods"] as! PaymentMethods
+        self.startPayment(self.component!,componentData: self.componentData!)
     }
     
     func paymentMethodsResponseHandler(result: Result<PaymentMethodsResponse, Error>) {
@@ -334,13 +343,21 @@ class AdyenPayment: RCTEventEmitter {
         if let actionComponent = component as? ActionComponent {
             actionComponent.delegate = self
         }
-        (UIApplication.shared.delegate?.window??.rootViewController)!.present(component.viewController, animated: true)
+
+        let keyWindow = UIApplication.shared.windows.filter {$0.isKeyWindow}.first
+        if var topController = keyWindow?.rootViewController {
+            while let presentedViewController = topController.presentedViewController {
+                topController = presentedViewController
+            }
+            component.viewController.modalPresentationStyle = .fullScreen
+            topController.present(component.viewController, animated: true)
+        }
         self.currentComponent = component
     }
     
     func performPayment(with data: PaymentComponentData) {
         let request = PaymentsRequest(data: data)
-        apiClient.perform(request, completionHandler: paymentResponseHandler)
+        AppServiceConfigData.custom_api ? self.resolve!(data.paymentMethod.dictionaryRepresentation) : apiClient.perform(request, completionHandler: paymentResponseHandler)
     }
     
     func performPaymentDetails(with data: ActionComponentData) {
@@ -364,7 +381,7 @@ class AdyenPayment: RCTEventEmitter {
                         }else{
                             let errMsg = (validationError.errorCode ?? "") + " : " + (validationError.errorMessage ?? "")
                                 self?.sendFailure(code : "ERROR_PAYMENT_DETAILS",message: errMsg)
-                            (UIApplication.shared.delegate?.window??.rootViewController)!.dismiss(animated: true) {}
+                            self!.currentComponent?.viewController.dismiss(animated: true) {}
                         }   
                     }
                 }
@@ -425,7 +442,7 @@ class AdyenPayment: RCTEventEmitter {
             self.sendFailure(code : "ERROR_UNKNOWN",message: "Unknown Error")
         }
         currentComponent?.stopLoading(withSuccess: true) { [weak self] in
-            (UIApplication.shared.delegate?.window??.rootViewController)!.dismiss(animated: true) {}
+            self!.currentComponent?.viewController.dismiss(animated: true) {}
         }
         redirectComponent = nil
         threeDS2Component = nil
@@ -441,10 +458,14 @@ class AdyenPayment: RCTEventEmitter {
         }
         redirectComponent = nil
         threeDS2Component = nil
-        (UIApplication.shared.delegate?.window??.rootViewController)!.dismiss(animated: true) {}
+        self.currentComponent?.viewController.dismiss(animated: true) {}
     }
     
-
+    @objc func dismiss() {
+        DispatchQueue.main.async {
+            self.currentComponent?.viewController.dismiss(animated: true) {}
+        }
+    }
     
     private func presentAlert(with error: Error, retryHandler: (() -> Void)? = nil) {
         let alertController = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
