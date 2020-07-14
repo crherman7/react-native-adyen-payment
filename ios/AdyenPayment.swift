@@ -472,9 +472,7 @@ class AdyenPayment: RCTEventEmitter {
         do {
             let encrypted = try CardEncryptor.encryptedCard(for: card, publicKey: publicKey as String)
             resolve(encrypted.securityCode)
-        } catch {
-            reject("Failed to encrypt CVV.");
-        }
+        } catch {}
     }
 
     private func presentAlert(with error: Error, retryHandler: (() -> Void)? = nil) {
