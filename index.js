@@ -70,6 +70,9 @@ export default {
     paymentMethodsResponseHandlerPromise(paymentMethodsResponse){
         return AdyenPayment.paymentMethodsResponseHandlerPromise(paymentMethodsResponse);
     },
+    encryptCvv(cvv, publicKey) {
+        return AdyenPayment.encryptCvv(cvv, publicKey);
+    },
     dismiss(){
         return AdyenPayment.dismiss();
     },

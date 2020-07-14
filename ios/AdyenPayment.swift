@@ -466,7 +466,17 @@ class AdyenPayment: RCTEventEmitter {
             self.currentComponent?.viewController.dismiss(animated: true) {}
         }
     }
-    
+
+    @objc func encryptCvv(_ cvv: NSString, publicKey: NSString, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        let card = CardEncryptor.Card(securityCode: cvv as String)
+        do {
+            let encrypted = try CardEncryptor.encryptedCard(for: card, publicKey: publicKey as String)
+            resolve(encrypted.securityCode)
+        } catch {
+            reject("Failed to encrypt CVV.");
+        }
+    }
+
     private func presentAlert(with error: Error, retryHandler: (() -> Void)? = nil) {
         let alertController = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
