@@ -200,10 +200,10 @@ class AdyenPayment: RCTEventEmitter {
     }
     
     func showPayment(_ component: NSString,componentData : NSDictionary,paymentDetails : NSDictionary){
-        DispatchQueue.main.async {
-            let rootViewController = UIApplication.shared.delegate?.window??.rootViewController
-            self.showSpinner(onView: rootViewController!.view)
-        }
+//        DispatchQueue.main.async {
+//            let rootViewController = UIApplication.shared.delegate?.window??.rootViewController
+//            self.showSpinner(onView: rootViewController!.view)
+//        }
         self.setPaymentDetails(paymentDetails)
         self.componentData = componentData
         self.component = component as String
@@ -211,12 +211,15 @@ class AdyenPayment: RCTEventEmitter {
         AppServiceConfigData.custom_api ? self.resolve!(nil) : self.apiClient.perform(request, completionHandler: self.paymentMethodsResponseHandler)
     }
 
-    @objc func paymentMethodsResponseHandlerPromise(_ response: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc func paymentMethodsResponseHandlerPromise(_ paymentMethodsResponse: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         self.resolve = resolve
         self.reject = reject
-
-        self.paymentMethods = response["paymentMethods"] as! PaymentMethods
-        self.startPayment(self.component!,componentData: self.componentData!)
+        let jsonData = try! JSONSerialization.data(withJSONObject : paymentMethodsResponse, options: .prettyPrinted)
+        do {
+            let paymentMethodsResponse = try Coder.decode(jsonData) as PaymentMethodsResponse
+            self.paymentMethods = paymentMethodsResponse.paymentMethods
+            self.startPayment(self.component!,componentData: self.componentData!)
+        } catch{}
     }
     
     func paymentMethodsResponseHandler(result: Result<PaymentMethodsResponse, Error>) {
@@ -357,7 +360,9 @@ class AdyenPayment: RCTEventEmitter {
     
     func performPayment(with data: PaymentComponentData) {
         let request = PaymentsRequest(data: data)
-        AppServiceConfigData.custom_api ? self.resolve!(data.paymentMethod.dictionaryRepresentation) : apiClient.perform(request, completionHandler: paymentResponseHandler)
+        var dataDict = data.paymentMethod.dictionaryRepresentation
+        dataDict["storePaymentMethod"] = data.storePaymentMethod
+        AppServiceConfigData.custom_api ? self.resolve!(dataDict) : apiClient.perform(request, completionHandler: paymentResponseHandler)
     }
     
     func performPaymentDetails(with data: ActionComponentData) {
