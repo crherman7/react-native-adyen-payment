@@ -367,7 +367,9 @@ class AdyenPayment: RCTEventEmitter {
     
     func performPaymentDetails(with data: ActionComponentData) {
         let request = PaymentDetailsRequest(details: data.details, paymentData: data.paymentData)
-        apiClient.perform(request, completionHandler: paymentResponseHandler)
+        var requestDict = request.details.dictionaryRepresentation;
+        requestDict["paymentData"] = request.paymentData
+        AppServiceConfigData.custom_api ? self.resolve!(requestDict) : apiClient.perform(request, completionHandler: paymentResponseHandler)
     }
     
     func paymentResponseHandler(result: Result<PaymentsResponse, Error>) {
@@ -387,7 +389,7 @@ class AdyenPayment: RCTEventEmitter {
                             let errMsg = (validationError.errorCode ?? "") + " : " + (validationError.errorMessage ?? "")
                                 self?.sendFailure(code : "ERROR_PAYMENT_DETAILS",message: errMsg)
                             self!.currentComponent?.viewController.dismiss(animated: true) {}
-                        }   
+                        }
                     }
                 }
             }
@@ -398,6 +400,36 @@ class AdyenPayment: RCTEventEmitter {
         }
     }
     
+    @objc func handleRedirectPromise(_ actionRequest: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        self.resolve = resolve
+        self.reject = reject
+        let jsonData = try! JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
+        do {
+            let action = try Coder.decode(jsonData) as RedirectAction
+            redirect(with: action)
+        } catch{}
+    }
+
+    @objc func handleFingerprintPromise(_ actionRequest: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        self.resolve = resolve
+        self.reject = reject
+        let jsonData = try! JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
+        do {
+            let action = try Coder.decode(jsonData) as ThreeDS2FingerprintAction
+            performThreeDS2Fingerprint(with: action)
+        } catch{}
+    }
+
+    @objc func handleChallengePromise(_ actionRequest: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        self.resolve = resolve
+        self.reject = reject
+        let jsonData = try! JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
+        do {
+            let action = try Coder.decode(jsonData) as ThreeDS2ChallengeAction
+            performThreeDS2Challenge(with: action)
+        } catch{}
+    }
+
     func handle(_ action: Action) {
         if let dropInComponent = currentComponent as? DropInComponent {
             dropInComponent.handle(action)
@@ -417,7 +449,17 @@ class AdyenPayment: RCTEventEmitter {
         let redirectComponent = RedirectComponent(action: action)
         redirectComponent.delegate = self
         self.redirectComponent = redirectComponent
-        UIApplication.shared.keyWindow?.rootViewController?.present(redirectComponent.viewController, animated: true)
+        DispatchQueue.main.async {
+            let keyWindow = UIApplication.shared.windows.filter {$0.isKeyWindow}.first
+            if var topController = keyWindow?.rootViewController {
+                while let presentedViewController = topController.presentedViewController {
+                    topController = presentedViewController
+                }
+                redirectComponent.viewController.modalPresentationStyle = .fullScreen
+                topController.present(redirectComponent.viewController, animated: true)
+            }
+        }
+        self.currentComponent = redirectComponent
     }
     
     func performThreeDS2Fingerprint(with action: ThreeDS2FingerprintAction) {
