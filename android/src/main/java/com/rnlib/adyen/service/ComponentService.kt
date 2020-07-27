@@ -12,6 +12,8 @@ import com.adyen.checkout.base.model.payments.request.PaymentMethodDetails
 import com.adyen.checkout.core.exception.CheckoutException
 import com.adyen.checkout.core.log.LogUtil
 import com.adyen.checkout.core.log.Logger
+import com.rnlib.adyen.AdyenPaymentModule
+import com.rnlib.adyen.ReactNativeUtils
 import org.json.JSONObject
 
 /**
@@ -58,9 +60,9 @@ abstract class ComponentService : JobIntentService() {
         // False positive
         @Suppress("FunctionParameterNaming")
         fun requestPaymentsCall(
-            context: Context,
-            paymentComponentData: PaymentComponentData<out PaymentMethodDetails>,
-            merchantService: ComponentName
+                context: Context,
+                paymentComponentData: PaymentComponentData<out PaymentMethodDetails>,
+                merchantService: ComponentName
         ) {
             Logger.d(TAG, "requestPaymentsCall - ${paymentComponentData.paymentMethod?.type}")
 
@@ -91,7 +93,7 @@ abstract class ComponentService : JobIntentService() {
         when (intent.getStringExtra(REQUEST_TYPE_KEY)) {
             PAYMENTS_REQUEST -> {
                 val paymentComponentDataForRequest =
-                    intent.getParcelableExtra<PaymentComponentData<in PaymentMethodDetails>>(PAYMENT_COMPONENT_DATA_EXTRA_KEY)
+                        intent.getParcelableExtra<PaymentComponentData<in PaymentMethodDetails>>(PAYMENT_COMPONENT_DATA_EXTRA_KEY)
                 askPaymentsCall(paymentComponentDataForRequest)
             }
             DETAILS_REQUEST -> {
@@ -120,9 +122,24 @@ abstract class ComponentService : JobIntentService() {
         Logger.d(TAG, "askPaymentsCall")
 
         // Merchant makes network call
-        val paymentsCallResult = makePaymentsCall(PaymentComponentData.SERIALIZER.serialize(paymentComponentData))
+        if (AdyenPaymentModule.getAppServiceConfigData().customApi) {
+            val jsonObj = PaymentMethodDetails.SERIALIZER.serialize(paymentComponentData.getPaymentMethod() as PaymentMethodDetails)
+            AdyenPaymentModule.getPromise()!!.resolve(ReactNativeUtils.convertJsonToMap(jsonObj))
+            val obj = JSONObject()
+                    .put("resultType", "SUCCESS")
+                    .put("message", JSONObject(
+                            "{\"pspReference\":\"\"," +
+                                    "\"resultCode\":\"Authorised\"," +
+                                    "\"amount\":{\"currency\":\"\",\"value\":0}," +
+                                    "\"merchantReference\":\"\"}"
+                    ))
 
-        handleCallResult(paymentsCallResult)
+            handleCallResult(CallResult(CallResult.ResultType.FINISHED, obj.toString()))
+        } else {
+            val paymentsCallResult = makePaymentsCall(PaymentComponentData.SERIALIZER.serialize(paymentComponentData))
+
+            handleCallResult(paymentsCallResult)
+        }
     }
 
     private fun askDetailsCall(details: JSONObject) {
