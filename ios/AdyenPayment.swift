@@ -367,9 +367,8 @@ class AdyenPayment: RCTEventEmitter {
     
     func performPaymentDetails(with data: ActionComponentData) {
         let request = PaymentDetailsRequest(details: data.details, paymentData: data.paymentData)
-        var requestDict = request.details.dictionaryRepresentation;
-        requestDict["paymentData"] = request.paymentData
-        AppServiceConfigData.custom_api ? self.resolve!(requestDict) : apiClient.perform(request, completionHandler: paymentResponseHandler)
+        var result = request.details.dictionaryRepresentation["threeds2.fingerprint"] ?? request.details.dictionaryRepresentation["threeds2.challengeResult"] ?? request.details.dictionaryRepresentation;
+        AppServiceConfigData.custom_api ? self.resolve!(result) : apiClient.perform(request, completionHandler: paymentResponseHandler)
     }
     
     func paymentResponseHandler(result: Result<PaymentsResponse, Error>) {
