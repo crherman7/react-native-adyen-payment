@@ -14,6 +14,7 @@ import com.adyen.checkout.core.log.LogUtil
 import com.adyen.checkout.core.log.Logger
 import com.rnlib.adyen.AdyenPaymentModule
 import com.rnlib.adyen.ReactNativeUtils
+import com.rnlib.adyen.ui.RedirectActivity
 import org.json.JSONObject
 
 /**
@@ -125,16 +126,7 @@ abstract class ComponentService : JobIntentService() {
         if (AdyenPaymentModule.getAppServiceConfigData().customApi) {
             val jsonObj = PaymentMethodDetails.SERIALIZER.serialize(paymentComponentData.getPaymentMethod() as PaymentMethodDetails)
             AdyenPaymentModule.getPromise()!!.resolve(ReactNativeUtils.convertJsonToMap(jsonObj))
-            val obj = JSONObject()
-                    .put("resultType", "SUCCESS")
-                    .put("message", JSONObject(
-                            "{\"pspReference\":\"\"," +
-                                    "\"resultCode\":\"Authorised\"," +
-                                    "\"amount\":{\"currency\":\"\",\"value\":0}," +
-                                    "\"merchantReference\":\"\"}"
-                    ))
-
-            handleCallResult(CallResult(CallResult.ResultType.FINISHED, obj.toString()))
+            handleCallResult(CallResult(CallResult.ResultType.CANCEL, ""))
         } else {
             val paymentsCallResult = makePaymentsCall(PaymentComponentData.SERIALIZER.serialize(paymentComponentData))
 
@@ -149,6 +141,28 @@ abstract class ComponentService : JobIntentService() {
         val detailsCallResult = makeDetailsCall(details)
 
         handleCallResult(detailsCallResult)
+    }
+
+    public fun handleCallResultReact(callResult: CallResult, context: Context) {
+        val intent = Intent(context, RedirectActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+        if (callResult == null) {
+            // Make sure people don't return Null from Java code
+            throw CheckoutException("CallResult result from DropInService cannot be null.")
+        }
+        // if type is WAIT do nothing and wait for async callback.
+        while(!RedirectActivity.ready) {
+            Logger.d(TAG, "LocalBroadcastManager is not ready")
+        }
+        if (callResult.type != CallResult.ResultType.WAIT) {
+            // send response back to activity
+            val resultIntent = Intent()
+            resultIntent.action = getCallResultAction(context)
+            resultIntent.putExtra(API_CALL_RESULT_KEY, callResult)
+            val localBroadcastManager = LocalBroadcastManager.getInstance(context)
+            localBroadcastManager.sendBroadcast(resultIntent)
+        }
     }
 
     private fun handleCallResult(callResult: CallResult?) {

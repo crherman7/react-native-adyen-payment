@@ -41,7 +41,11 @@ class CallResult(val type: ResultType, val content: String) : Parcelable {
         /**
          * Call wants to wait for asynchronous processing. Content is ignored.
          */
-        WAIT
+        WAIT,
+        /**
+         * Call was cancelled
+         */
+        CANCEL
     }
 
     companion object CREATOR : Parcelable.Creator<CallResult> {

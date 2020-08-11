@@ -69,6 +69,7 @@ import com.rnlib.adyen.ui.LoadingDialogFragment
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import com.rnlib.adyen.service.CallResult
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -195,6 +196,30 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         pmApiResponse.setPaymentMethods(paymentMethodsList)
         paymentMethodsApiResponse = pmApiResponse
         showCardComponent(ReactNativeUtils.convertMapToJson(reactComponentData))
+    }
+
+    @ReactMethod
+    fun handleRedirectPromise(actionRequest: ReadableMap, reactPromise: Promise){
+        promise = reactPromise
+        val actionRequestJson: JSONObject = ReactNativeUtils.convertMapToJson(actionRequest);
+        val callResult = CallResult(CallResult.ResultType.ACTION, actionRequestJson.toString())
+        AdyenComponentService().handleCallResultReact(callResult, reactApplicationContext)
+    }
+
+    @ReactMethod
+    fun handleFingerprintPromise(actionRequest: ReadableMap, reactPromise: Promise) {
+        promise = reactPromise
+        val actionRequestJson: JSONObject = ReactNativeUtils.convertMapToJson(actionRequest);
+        val callResult: CallResult = CallResult(CallResult.ResultType.ACTION, actionRequestJson.toString())
+        AdyenComponentService().handleCallResultReact(callResult, reactApplicationContext)
+    }
+
+    @ReactMethod
+    fun handleChallengePromise(actionRequest: ReadableMap, reactPromise: Promise) {
+        promise = reactPromise
+        val actionRequestJson: JSONObject = ReactNativeUtils.convertMapToJson(actionRequest);
+        val callResult: CallResult = CallResult(CallResult.ResultType.ACTION, actionRequestJson.toString())
+        AdyenComponentService().handleCallResultReact(callResult, reactApplicationContext)
     }
 
     @ReactMethod

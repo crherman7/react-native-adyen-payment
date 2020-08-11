@@ -332,6 +332,9 @@ class AdyenComponentActivity : AppCompatActivity(), DropInBottomSheetDialogFragm
             CallResult.ResultType.WAIT -> {
                 throw CheckoutException("WAIT CallResult is not expected to be propagated.")
             }
+            CallResult.ResultType.CANCEL -> {
+                closeComponent()
+            }
         }
     }
 
