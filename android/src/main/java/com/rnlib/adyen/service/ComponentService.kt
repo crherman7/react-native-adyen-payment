@@ -125,6 +125,7 @@ abstract class ComponentService : JobIntentService() {
         // Merchant makes network call
         if (AdyenPaymentModule.getAppServiceConfigData().customApi) {
             val jsonObj = PaymentMethodDetails.SERIALIZER.serialize(paymentComponentData.getPaymentMethod() as PaymentMethodDetails)
+            jsonObj.putOpt("storePaymentMethod", paymentComponentData.isStorePaymentMethodEnable())
             AdyenPaymentModule.getPromise()!!.resolve(ReactNativeUtils.convertJsonToMap(jsonObj))
             handleCallResult(CallResult(CallResult.ResultType.CANCEL, ""))
         } else {
