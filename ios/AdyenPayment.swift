@@ -15,6 +15,8 @@ class AdyenPayment: RCTEventEmitter {
     var resolve: RCTPromiseResolveBlock?
     var reject: RCTPromiseRejectBlock?
     var emitEvent : Bool = false
+    var formComponentStyle: FormComponentStyle?
+    var navigationStyle: NavigationStyle?
     
     lazy var apiClient = APIClient()
     
@@ -104,7 +106,7 @@ class AdyenPayment: RCTEventEmitter {
                 configuration.card.publicKey = cardComponent["card_public_key"] as? String
                 self.showDropInComponent(configuration: configuration)
             }else{
-                let component = CardComponent(paymentMethod: paymentMethod, publicKey:(cardComponent["card_public_key"] as! String))
+                let component = CardComponent(paymentMethod: paymentMethod, publicKey:(cardComponent["card_public_key"] as! String), style: self.formComponentStyle as! AnyFormComponentStyle, navigationStyle: self.navigationStyle!)
                 self.present(component)
             }
         }
@@ -429,6 +431,22 @@ class AdyenPayment: RCTEventEmitter {
         } catch{}
     }
 
+    @objc func setStyle(_ style: NSDictionary) {
+        let jsonData = try! JSONSerialization.data(withJSONObject: style, options: .prettyPrinted)
+        do {
+            let componentStyle = try Coder.decode(jsonData) as ComponentStyle
+            var color = UIColor(red: componentStyle.red, green: componentStyle.green, blue: componentStyle.blue)
+            self.formComponentStyle = FormComponentStyle()
+            self.formComponentStyle?.footer.button.backgroundColor = color
+            self.navigationStyle = NavigationStyle()
+            self.navigationStyle?.tintColor = color
+            self.navigationStyle?.barTintColor = color
+            self.navigationStyle?.barTitle = TextStyle(font: .systemFont(ofSize: 20, weight: .semibold),
+                                                      color: color,
+                                                      textAlignment: .natural)
+        } catch{}
+    }
+
     func handle(_ action: Action) {
         if let dropInComponent = currentComponent as? DropInComponent {
             dropInComponent.handle(action)
@@ -578,4 +596,20 @@ extension AdyenPayment: ActionComponentDelegate {
     internal func didProvide(_ data: ActionComponentData, from component: ActionComponent) {
         performPaymentDetails(with: data)
     }
+}
+
+extension UIColor {
+    convenience init(red: Int, green: Int, blue: Int) {
+        let newRed = CGFloat(red)/255
+        let newGreen = CGFloat(green)/255
+        let newBlue = CGFloat(blue)/255
+
+        self.init(red: newRed, green: newGreen, blue: newBlue, alpha: 1.0)
+    }
+}
+
+struct ComponentStyle: Codable {
+    var red: Int
+    var green: Int
+    var blue: Int
 }
