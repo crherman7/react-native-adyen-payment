@@ -79,6 +79,9 @@ export default {
     handleChallengePromise(actionRequest) {
         return AdyenPayment.handleChallengePromise(actionRequest);
     },
+    setStyle(style) {
+        return AdyenPayment.setStyle(style);
+    },
     encryptCvv(cvv, publicKey) {
         return AdyenPayment.encryptCvv(cvv, publicKey);
     },
