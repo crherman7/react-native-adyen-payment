@@ -156,6 +156,9 @@ abstract class ComponentService : JobIntentService() {
         while(!RedirectActivity.ready) {
             Logger.d(TAG, "LocalBroadcastManager is not ready")
         }
+        if (callResult.content.contains("\"type\":\"redirect\"")) {
+            RedirectActivity.threeDs = true
+        }
         if (callResult.type != CallResult.ResultType.WAIT) {
             // send response back to activity
             val resultIntent = Intent()

@@ -26,9 +26,11 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
 
     companion object {
         var ready: Boolean = false
+        var threeDs: Boolean = false
     }
 
     private lateinit var localBroadcastManager: LocalBroadcastManager
+    private var cancelled: Boolean = false
 
     @Suppress(Lint.PROTECTED_IN_FINAL)
     protected lateinit var actionHandler: ActionHandler
@@ -49,10 +51,22 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
         ready = true
     }
 
+    override fun onResume() {
+        super.onResume()
+        Logger.d(LogUtil.getTag(), "On Resumed")
+        if (cancelled && threeDs) {
+            AdyenPaymentModule.getPromise()!!.resolve(null)
+            finish()
+        } else if(threeDs) {
+            cancelled = true
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         localBroadcastManager.unregisterReceiver(callResultReceiver)
         ready = false
+        threeDs = false
     }
 
     private val callResultReceiver = object : BroadcastReceiver() {
@@ -92,6 +106,7 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
             Intent.ACTION_VIEW -> {
                 val data = intent.data
                 if (data != null && data.toString().startsWith(RedirectUtil.REDIRECT_RESULT_SCHEME)) {
+                    cancelled = false
                     actionHandler.handleRedirectResponse(data)
                 } else {
                 }
@@ -125,5 +140,7 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
 
     override fun onError(errorMessage: String) {
         Logger.d(LogUtil.getTag(), errorMessage)
+        AdyenPaymentModule.getPromise()!!.resolve(null)
+        finish()
     }
 }
