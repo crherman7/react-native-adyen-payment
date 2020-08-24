@@ -14,6 +14,7 @@ import com.adyen.checkout.card.CardComponent
 import com.adyen.checkout.core.exception.CheckoutException
 import com.adyen.checkout.core.log.LogUtil
 import com.adyen.checkout.core.log.Logger
+import com.rnlib.adyen.AdyenPaymentModule
 
 import com.rnlib.adyen.R
 import com.rnlib.adyen.ui.AdyenComponentViewModel
@@ -26,6 +27,13 @@ class CardComponentDialogFragment : BaseComponentDialogFragment() {
 
     companion object : BaseCompanion<CardComponentDialogFragment>(CardComponentDialogFragment::class.java) {
         private val TAG = LogUtil.getTag()
+    }
+
+    override fun onBackPressed(): Boolean {
+        if (AdyenPaymentModule.getAppServiceConfigData().customApi) {
+            return false
+        }
+        return super.onBackPressed()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
