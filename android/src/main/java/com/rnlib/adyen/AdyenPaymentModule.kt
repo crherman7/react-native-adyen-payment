@@ -94,6 +94,7 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         private var paymentData : JSONObject = JSONObject()
         private val configData : AppServiceConfigData = AppServiceConfigData()
         private var paymentMethodsApiResponse : PaymentMethodsApiResponse = PaymentMethodsApiResponse()
+        private lateinit var componentType: String
 
         fun  getPaymentData(): JSONObject{
             return paymentData
@@ -172,6 +173,7 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
     @ReactMethod
     fun startPaymentPromise(component : String,componentData : ReadableMap,paymentDetails : ReadableMap,reactPromise : Promise){
         promise = reactPromise
+        componentType = component
         reactComponentData = componentData
         this.showPayment(component,componentData,paymentDetails)
     }
@@ -193,9 +195,12 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         for (each in pmApiResponse.paymentMethods!!) {
             paymentMethodsList.add(each)
         }
-        pmApiResponse.setPaymentMethods(paymentMethodsList)
+        pmApiResponse.paymentMethods = paymentMethodsList
         paymentMethodsApiResponse = pmApiResponse
-        showCardComponent(ReactNativeUtils.convertMapToJson(reactComponentData))
+        when(componentType) {
+            PaymentMethodTypes.BCMC -> showBCMCComponent(ReactNativeUtils.convertMapToJson(reactComponentData))
+            PaymentMethodTypes.SCHEME -> showCardComponent(ReactNativeUtils.convertMapToJson(reactComponentData))
+        }
     }
 
     @ReactMethod

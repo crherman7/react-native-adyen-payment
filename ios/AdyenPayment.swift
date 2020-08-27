@@ -127,7 +127,7 @@ class AdyenPayment: RCTEventEmitter {
                guard let paymentMethod = self.paymentMethods?.paymentMethod(ofType: BCMCPaymentMethod.self) else { return }
             let bcmcComponent : [String:Any] = componentData["bcmc"] as? [String:Any] ?? [:]
             if(!bcmcComponent.isEmpty){
-                let component = BCMCComponent(paymentMethod: paymentMethod, publicKey: bcmcComponent["card_public_key"] as! String)
+                let component = BCMCComponent(paymentMethod: paymentMethod, publicKey: bcmcComponent["card_public_key"] as! String, style: self.formComponentStyle as! AnyFormComponentStyle, navigationStyle: self.navigationStyle!)
                     component.delegate = self
                     self.present(component)
                 }
