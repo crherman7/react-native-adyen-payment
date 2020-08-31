@@ -15,6 +15,7 @@ import com.adyen.checkout.core.log.Logger
 import com.rnlib.adyen.AdyenPaymentModule
 import com.rnlib.adyen.ReactNativeUtils
 import com.rnlib.adyen.ui.RedirectActivity
+import com.rnlib.adyen.ui.base.BaseComponentDialogFragment
 import org.json.JSONObject
 
 /**
@@ -126,6 +127,7 @@ abstract class ComponentService : JobIntentService() {
         if (AdyenPaymentModule.getAppServiceConfigData().customApi) {
             val jsonObj = PaymentMethodDetails.SERIALIZER.serialize(paymentComponentData.getPaymentMethod() as PaymentMethodDetails)
             jsonObj.putOpt("storePaymentMethod", paymentComponentData.isStorePaymentMethodEnable())
+            jsonObj.putOpt("type", BaseComponentDialogFragment.componentType)
             AdyenPaymentModule.getPromise()!!.resolve(ReactNativeUtils.convertJsonToMap(jsonObj))
             handleCallResult(CallResult(CallResult.ResultType.CANCEL, ""))
         } else {

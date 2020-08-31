@@ -24,6 +24,7 @@ open abstract class BaseComponentDialogFragment : DropInBottomSheetDialogFragmen
 
     companion object {
         private val TAG = LogUtil.getTag()
+        lateinit var componentType: String
     }
 
     lateinit var paymentMethod: PaymentMethod
@@ -91,6 +92,7 @@ open abstract class BaseComponentDialogFragment : DropInBottomSheetDialogFragmen
         try {
             if (componentState != null) {
                 if (componentState.isValid) {
+                    componentType = paymentMethod.type.toString()
                     protocol.requestPaymentsCall(componentState.data)
                 } else {
                     throw CheckoutException("PaymentComponentState are not valid.")
