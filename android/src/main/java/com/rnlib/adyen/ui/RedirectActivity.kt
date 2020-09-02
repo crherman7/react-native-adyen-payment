@@ -55,7 +55,7 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
         super.onResume()
         Logger.d(LogUtil.getTag(), "On Resumed")
         if (cancelled && threeDs) {
-            AdyenPaymentModule.getPromise()!!.resolve(null)
+            AdyenPaymentModule.getPromise()!!.reject("1", "Transaction Cancelled")
             finish()
         } else if(threeDs) {
             cancelled = true
@@ -140,7 +140,7 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
 
     override fun onError(errorMessage: String) {
         Logger.d(LogUtil.getTag(), errorMessage)
-        AdyenPaymentModule.getPromise()!!.resolve(null)
+        AdyenPaymentModule.getPromise()!!.reject("1", errorMessage)
         finish()
     }
 }
