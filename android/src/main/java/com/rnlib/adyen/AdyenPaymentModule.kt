@@ -326,9 +326,9 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         val resultIntent : Intent = (context.getPackageManager().getLaunchIntentForPackage(context.getApplicationContext().getPackageName())) as Intent
         resultIntent.flags = (Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val adyenConfigurationBuilder = AdyenComponentConfiguration.Builder(
-                context,
-                resultIntent,
-                AdyenComponentService::class.java
+            context,
+            resultIntent,
+            AdyenComponentService::class.java
         )
         when (configData.environment) {
             "test" -> {adyenConfigurationBuilder.setEnvironment(Environment.TEST)}
@@ -445,8 +445,8 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         val context = getReactApplicationContext()
         val cardComponent : JSONObject = componentData.getJSONObject(PaymentMethodTypes.SCHEME)
         val cardConfiguration = CardConfiguration.Builder(context, cardComponent.getString("card_public_key"))
-                .setShopperReference(paymentData.getString("shopperReference"))
-                .build()
+                            .setShopperReference(paymentData.getString("shopperReference"))
+                            .build()
         val configBuilder : AdyenComponentConfiguration.Builder = createConfigurationBuilder(context)
         configBuilder.addCardConfiguration(cardConfiguration)
         AdyenComponent.startPayment(context, paymentMethodsApiResponse, configBuilder.build())
@@ -513,12 +513,12 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
 
         val cardComponent : JSONObject = componentData.getJSONObject(PaymentMethodTypes.SCHEME)
         val cardConfiguration = CardConfiguration.Builder(context, cardComponent.getString("card_public_key"))
-                .setShopperReference(paymentData.getString("shopperReference"))
-                .setShopperLocale(shopperLocale)
-                .build()
+                            .setShopperReference(paymentData.getString("shopperReference"))
+                            .setShopperLocale(shopperLocale)
+                            .build()
         val bcmcComponent : JSONObject = componentData.getJSONObject(PaymentMethodTypes.BCMC)
         val bcmcConfiguration = BcmcConfiguration.Builder(context, bcmcComponent.getString("card_public_key"))
-                .setShopperLocale(shopperLocale).build()
+                                .setShopperLocale(shopperLocale).build()
 
         val afterPayComponent : JSONObject = if(componentData.has(PaymentMethodTypes.AFTER_PAY))  componentData.getJSONObject(PaymentMethodTypes.AFTER_PAY) else JSONObject()
         var afterPayConfiguration : AfterPayConfiguration? = null
@@ -533,8 +533,8 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
 
         val configBuilder : AdyenComponentConfiguration.Builder = createConfigurationBuilder(context)
         configBuilder.addCardConfiguration(cardConfiguration)
-                .addBcmcConfiguration(bcmcConfiguration)
-                .addGooglePayConfiguration(googlePayConfig)
+            .addBcmcConfiguration(bcmcConfiguration)
+            .addGooglePayConfiguration(googlePayConfig)
 
         if((afterPayComponent.length() != 0) && afterPayConfiguration != null){
             configBuilder.addAfterPayConfiguration(afterPayConfiguration)

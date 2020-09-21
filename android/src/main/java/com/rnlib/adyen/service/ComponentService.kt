@@ -14,7 +14,6 @@ import com.adyen.checkout.core.log.LogUtil
 import com.adyen.checkout.core.log.Logger
 import com.rnlib.adyen.AdyenPaymentModule
 import com.rnlib.adyen.ReactNativeUtils
-import com.rnlib.adyen.ui.RedirectActivity
 import com.rnlib.adyen.ui.base.BaseComponentDialogFragment
 import org.json.JSONObject
 
@@ -62,9 +61,9 @@ abstract class ComponentService : JobIntentService() {
         // False positive
         @Suppress("FunctionParameterNaming")
         fun requestPaymentsCall(
-                context: Context,
-                paymentComponentData: PaymentComponentData<out PaymentMethodDetails>,
-                merchantService: ComponentName
+            context: Context,
+            paymentComponentData: PaymentComponentData<out PaymentMethodDetails>,
+            merchantService: ComponentName
         ) {
             Logger.d(TAG, "requestPaymentsCall - ${paymentComponentData.paymentMethod?.type}")
 
@@ -95,7 +94,7 @@ abstract class ComponentService : JobIntentService() {
         when (intent.getStringExtra(REQUEST_TYPE_KEY)) {
             PAYMENTS_REQUEST -> {
                 val paymentComponentDataForRequest =
-                        intent.getParcelableExtra<PaymentComponentData<in PaymentMethodDetails>>(PAYMENT_COMPONENT_DATA_EXTRA_KEY)
+                    intent.getParcelableExtra<PaymentComponentData<in PaymentMethodDetails>>(PAYMENT_COMPONENT_DATA_EXTRA_KEY)
                 askPaymentsCall(paymentComponentDataForRequest)
             }
             DETAILS_REQUEST -> {

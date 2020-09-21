@@ -3,15 +3,15 @@ import com.adyen.checkout.base.model.payments.Amount
 
 @Suppress("MagicNumber")
 data class PaymentMethodsRequest(
-        val merchantAccount: String,
-        val shopperReference: String,
-        val additionalData: Any,
-        val allowedPaymentMethods: ArrayList<String>,
-        val amount: Amount,
-        val blockedPaymentMethods: ArrayList<String>,
-        val countryCode: String = "FR",
-        val shopperLocale: String = "en_US",
-        val channel: String = "android"
+    val merchantAccount: String,
+    val shopperReference: String,
+    val additionalData: Any,
+    val allowedPaymentMethods: ArrayList<String>,
+    val amount: Amount,
+    val blockedPaymentMethods: ArrayList<String>,
+    val countryCode: String = "FR",
+    val shopperLocale: String = "en_US",
+    val channel: String = "android"
 )
 
 data class AdditionalData(val allow3DS2 : String = "true",val executeThreeD: String="false")
