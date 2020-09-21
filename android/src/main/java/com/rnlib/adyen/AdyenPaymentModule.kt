@@ -51,6 +51,7 @@ import org.json.JSONObject
 import com.rnlib.adyen.AdyenComponent
 import com.rnlib.adyen.AdyenComponentConfiguration
 import adyen.com.adyencse.pojo.Card
+import androidx.core.app.JobIntentService.enqueueWork
 import com.adyen.checkout.base.model.paymentmethods.PaymentMethod
 import com.adyen.checkout.base.util.PaymentMethodTypes
 import com.adyen.checkout.entercash.EntercashConfiguration
@@ -70,6 +71,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.rnlib.adyen.service.CallResult
+import com.rnlib.adyen.service.RedirectService
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -208,7 +210,10 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         promise = reactPromise
         val actionRequestJson: JSONObject = ReactNativeUtils.convertMapToJson(actionRequest);
         val callResult = CallResult(CallResult.ResultType.ACTION, actionRequestJson.toString())
-        AdyenComponentService().handleCallResultReact(callResult, reactApplicationContext)
+        enqueueWork(reactApplicationContext,
+                RedirectService::class.java,
+                RedirectService.redirectJobId,
+                Intent().putExtra(RedirectService.REDIRECT_CALL_RESULT_KEY, callResult))
     }
 
     @ReactMethod
@@ -216,7 +221,10 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         promise = reactPromise
         val actionRequestJson: JSONObject = ReactNativeUtils.convertMapToJson(actionRequest);
         val callResult: CallResult = CallResult(CallResult.ResultType.ACTION, actionRequestJson.toString())
-        AdyenComponentService().handleCallResultReact(callResult, reactApplicationContext)
+        enqueueWork(reactApplicationContext,
+                RedirectService::class.java,
+                RedirectService.redirectJobId,
+                Intent().putExtra(RedirectService.REDIRECT_CALL_RESULT_KEY, callResult))
     }
 
     @ReactMethod
@@ -224,7 +232,10 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         promise = reactPromise
         val actionRequestJson: JSONObject = ReactNativeUtils.convertMapToJson(actionRequest);
         val callResult: CallResult = CallResult(CallResult.ResultType.ACTION, actionRequestJson.toString())
-        AdyenComponentService().handleCallResultReact(callResult, reactApplicationContext)
+        enqueueWork(reactApplicationContext,
+                RedirectService::class.java,
+                RedirectService.redirectJobId,
+                Intent().putExtra(RedirectService.REDIRECT_CALL_RESULT_KEY, callResult))
     }
 
     @ReactMethod

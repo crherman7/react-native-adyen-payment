@@ -146,31 +146,6 @@ abstract class ComponentService : JobIntentService() {
         handleCallResult(detailsCallResult)
     }
 
-    public fun handleCallResultReact(callResult: CallResult, context: Context) {
-        val intent = Intent(context, RedirectActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
-        if (callResult == null) {
-            // Make sure people don't return Null from Java code
-            throw CheckoutException("CallResult result from DropInService cannot be null.")
-        }
-        // if type is WAIT do nothing and wait for async callback.
-        while(!RedirectActivity.ready) {
-            Logger.d(TAG, "LocalBroadcastManager is not ready")
-        }
-        if (callResult.content.contains("\"type\":\"redirect\"")) {
-            RedirectActivity.threeDs = true
-        }
-        if (callResult.type != CallResult.ResultType.WAIT) {
-            // send response back to activity
-            val resultIntent = Intent()
-            resultIntent.action = getCallResultAction(context)
-            resultIntent.putExtra(API_CALL_RESULT_KEY, callResult)
-            val localBroadcastManager = LocalBroadcastManager.getInstance(context)
-            localBroadcastManager.sendBroadcast(resultIntent)
-        }
-    }
-
     private fun handleCallResult(callResult: CallResult?) {
         if (callResult == null) {
             // Make sure people don't return Null from Java code
