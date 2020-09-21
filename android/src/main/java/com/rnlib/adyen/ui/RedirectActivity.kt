@@ -54,7 +54,7 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
     override fun onResume() {
         super.onResume()
         Logger.d(LogUtil.getTag(), "On Resumed")
-        if (cancelled && threeDs) {
+        if (cancelled && threeDs && AdyenPaymentModule.getPromise() != null) {
             AdyenPaymentModule.getPromise()!!.reject("1", "Transaction Cancelled")
             finish()
         } else if(threeDs) {
@@ -123,24 +123,28 @@ class RedirectActivity : AppCompatActivity(), ActionHandler.DetailsRequestedInte
     override fun requestDetailsCall(actionComponentData: ActionComponentData) {
         Logger.d(LogUtil.getTag(), actionComponentData.details.toString())
 
-        when {
-            actionComponentData.details?.has("threeds2.fingerprint")!! -> {
-                AdyenPaymentModule.getPromise()!!.resolve(actionComponentData.details?.get("threeds2.fingerprint"))
-            }
-            actionComponentData.details?.has("threeds2.challengeResult")!! -> {
-                AdyenPaymentModule.getPromise()!!.resolve(actionComponentData.details?.get("threeds2.challengeResult"))
-                finish()
-            }
-            else -> {
-                AdyenPaymentModule.getPromise()!!.resolve(ReactNativeUtils.convertJsonToMap(actionComponentData.details))
-                finish()
+        if (AdyenPaymentModule.getPromise() != null) {
+            when {
+                actionComponentData.details?.has("threeds2.fingerprint")!! -> {
+                    AdyenPaymentModule.getPromise()!!.resolve(actionComponentData.details?.get("threeds2.fingerprint"))
+                }
+                actionComponentData.details?.has("threeds2.challengeResult")!! -> {
+                    AdyenPaymentModule.getPromise()!!.resolve(actionComponentData.details?.get("threeds2.challengeResult"))
+                    finish()
+                }
+                else -> {
+                    AdyenPaymentModule.getPromise()!!.resolve(ReactNativeUtils.convertJsonToMap(actionComponentData.details))
+                    finish()
+                }
             }
         }
     }
 
     override fun onError(errorMessage: String) {
         Logger.d(LogUtil.getTag(), errorMessage)
-        AdyenPaymentModule.getPromise()!!.reject("1", errorMessage)
+        if (AdyenPaymentModule.getPromise() != null) {
+            AdyenPaymentModule.getPromise()!!.reject("1", errorMessage)
+        }
         finish()
     }
 }

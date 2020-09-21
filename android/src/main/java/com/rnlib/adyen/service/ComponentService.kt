@@ -123,7 +123,7 @@ abstract class ComponentService : JobIntentService() {
         Logger.d(TAG, "askPaymentsCall")
 
         // Merchant makes network call
-        if (AdyenPaymentModule.getAppServiceConfigData().customApi) {
+        if (AdyenPaymentModule.getAppServiceConfigData().customApi && AdyenPaymentModule.getPromise() != null) {
             val jsonObj = PaymentMethodDetails.SERIALIZER.serialize(paymentComponentData.getPaymentMethod() as PaymentMethodDetails)
             jsonObj.putOpt("storePaymentMethod", paymentComponentData.isStorePaymentMethodEnable())
             jsonObj.putOpt("type", BaseComponentDialogFragment.componentType)

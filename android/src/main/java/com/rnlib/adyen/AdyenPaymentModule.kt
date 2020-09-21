@@ -247,7 +247,9 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
                 .build()
                 .serialize(publicKey)
 
-        promise!!.resolve(result)
+        if(promise != null){
+            promise!!.resolve(result)
+        }
     }
 
     fun showPayment(component : String,componentData : ReadableMap,paymentDetails : ReadableMap) {
@@ -257,7 +259,7 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         val paymentMethodReq : PaymentMethodsRequest = PaymentMethodsRequest(paymentData.getString("merchantAccount"),
                 paymentData.getString("shopperReference"),additionalData,ArrayList<String>(),getAmt(paymentData.getJSONObject("amount")),
                 ArrayList<String>(),paymentData.getString("countryCode"),paymentData.getString("shopperLocale"),"Android")
-        if (configData.customApi) {
+        if (configData.customApi && promise != null) {
             promise!!.resolve(null)
         } else {
             val paymentMethods : Call<ResponseBody> = ApiService.checkoutApi(configData.base_url).paymentMethods(configData.app_url_headers,paymentMethodReq)
