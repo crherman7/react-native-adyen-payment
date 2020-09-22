@@ -360,6 +360,7 @@ class AdyenPayment: RCTEventEmitter {
         if (AppServiceConfigData.custom_api) {
             var dataDict = data.paymentMethod.dictionaryRepresentation
             dataDict["storePaymentMethod"] = data.storePaymentMethod
+            self.currentComponent?.viewController.dismiss(animated: true) {}
             self.resolve?(dataDict)
         } else {
             apiClient.perform(request, completionHandler: paymentResponseHandler)
