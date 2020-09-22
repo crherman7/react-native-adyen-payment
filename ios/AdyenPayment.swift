@@ -210,18 +210,20 @@ class AdyenPayment: RCTEventEmitter {
         self.componentData = componentData
         self.component = component as String
         let request = PaymentMethodsRequest()
-        AppServiceConfigData.custom_api ? self.resolve!(nil) : self.apiClient.perform(request, completionHandler: self.paymentMethodsResponseHandler)
+        AppServiceConfigData.custom_api ? self.resolve?(nil) : self.apiClient.perform(request, completionHandler: self.paymentMethodsResponseHandler)
     }
 
     @objc func paymentMethodsResponseHandlerPromise(_ paymentMethodsResponse: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         self.resolve = resolve
         self.reject = reject
-        let jsonData = try! JSONSerialization.data(withJSONObject : paymentMethodsResponse, options: .prettyPrinted)
         do {
+            let jsonData = try JSONSerialization.data(withJSONObject : paymentMethodsResponse, options: .prettyPrinted)
             let paymentMethodsResponse = try Coder.decode(jsonData) as PaymentMethodsResponse
             self.paymentMethods = paymentMethodsResponse.paymentMethods
-            self.startPayment(self.component!,componentData: self.componentData!)
-        } catch{}
+            self.startPayment(self.component ?? "", componentData: self.componentData ?? [:])
+        } catch {
+            reject("error", "Failed payment methods response", error)
+        }
     }
     
     func paymentMethodsResponseHandler(result: Result<PaymentMethodsResponse, Error>) {
@@ -349,28 +351,30 @@ class AdyenPayment: RCTEventEmitter {
             actionComponent.delegate = self
         }
 
-        let keyWindow = UIApplication.shared.windows.filter {$0.isKeyWindow}.first
-        if var topController = keyWindow?.rootViewController {
-            while let presentedViewController = topController.presentedViewController {
-                topController = presentedViewController
-            }
-            component.viewController.modalPresentationStyle = .fullScreen
-            topController.present(component.viewController, animated: true)
-        }
+        self.presentOnTop(with: component)
         self.currentComponent = component
     }
     
     func performPayment(with data: PaymentComponentData) {
         let request = PaymentsRequest(data: data)
-        var dataDict = data.paymentMethod.dictionaryRepresentation
-        dataDict["storePaymentMethod"] = data.storePaymentMethod
-        AppServiceConfigData.custom_api ? self.resolve!(dataDict) : apiClient.perform(request, completionHandler: paymentResponseHandler)
+        if (AppServiceConfigData.custom_api) {
+            var dataDict = data.paymentMethod.dictionaryRepresentation
+            dataDict["storePaymentMethod"] = data.storePaymentMethod
+            self.resolve?(dataDict)
+        } else {
+            apiClient.perform(request, completionHandler: paymentResponseHandler)
+        }
     }
     
     func performPaymentDetails(with data: ActionComponentData) {
         let request = PaymentDetailsRequest(details: data.details, paymentData: data.paymentData)
-        var result = request.details.dictionaryRepresentation["threeds2.fingerprint"] ?? request.details.dictionaryRepresentation["threeds2.challengeResult"] ?? request.details.dictionaryRepresentation;
-        AppServiceConfigData.custom_api ? self.resolve!(result) : apiClient.perform(request, completionHandler: paymentResponseHandler)
+        if (AppServiceConfigData.custom_api) {
+            var result = request.details.dictionaryRepresentation["threeds2.fingerprint"] ?? request.details.dictionaryRepresentation["threeds2.challengeResult"] ?? request.details.dictionaryRepresentation;
+            self.currentComponent?.viewController.dismiss(animated: true)
+            self.resolve?(result)
+        } else {
+            apiClient.perform(request, completionHandler: paymentResponseHandler)
+        }
     }
     
     func paymentResponseHandler(result: Result<PaymentsResponse, Error>) {
@@ -389,7 +393,7 @@ class AdyenPayment: RCTEventEmitter {
                         }else{
                             let errMsg = (validationError.errorCode ?? "") + " : " + (validationError.errorMessage ?? "")
                                 self?.sendFailure(code : "ERROR_PAYMENT_DETAILS",message: errMsg)
-                            self!.currentComponent?.viewController.dismiss(animated: true) {}
+                            self?.currentComponent?.viewController.dismiss(animated: true) {}
                         }
                     }
                 }
@@ -404,36 +408,42 @@ class AdyenPayment: RCTEventEmitter {
     @objc func handleRedirectPromise(_ actionRequest: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         self.resolve = resolve
         self.reject = reject
-        let jsonData = try! JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
         do {
+            let jsonData = try JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
             let action = try Coder.decode(jsonData) as RedirectAction
             redirect(with: action)
-        } catch{}
+        } catch {
+            reject("error", "Failed redirect", error)
+        }
     }
 
     @objc func handleFingerprintPromise(_ actionRequest: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         self.resolve = resolve
         self.reject = reject
-        let jsonData = try! JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
         do {
+            let jsonData = try JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
             let action = try Coder.decode(jsonData) as ThreeDS2FingerprintAction
             performThreeDS2Fingerprint(with: action)
-        } catch{}
+        } catch {
+            reject("error", "Failed fingerprint", error)
+        }
     }
 
     @objc func handleChallengePromise(_ actionRequest: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         self.resolve = resolve
         self.reject = reject
-        let jsonData = try! JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
         do {
+            let jsonData = try JSONSerialization.data(withJSONObject : actionRequest, options: .prettyPrinted)
             let action = try Coder.decode(jsonData) as ThreeDS2ChallengeAction
             performThreeDS2Challenge(with: action)
-        } catch{}
+        } catch {
+            reject("error", "Failed challenge", error)
+        }
     }
 
     @objc func setStyle(_ style: NSDictionary) {
-        let jsonData = try! JSONSerialization.data(withJSONObject: style, options: .prettyPrinted)
         do {
+            let jsonData = try JSONSerialization.data(withJSONObject: style, options: .prettyPrinted)
             let componentStyle = try Coder.decode(jsonData) as ComponentStyle
             var color = UIColor(red: componentStyle.red, green: componentStyle.green, blue: componentStyle.blue)
             self.formComponentStyle = FormComponentStyle()
@@ -444,7 +454,9 @@ class AdyenPayment: RCTEventEmitter {
             self.navigationStyle?.barTitle = TextStyle(font: .systemFont(ofSize: 20, weight: .semibold),
                                                       color: color,
                                                       textAlignment: .natural)
-        } catch{}
+        } catch{
+            reject?("error", "Failed setting style", error)
+        }
     }
 
     func handle(_ action: Action) {
@@ -466,16 +478,7 @@ class AdyenPayment: RCTEventEmitter {
         let redirectComponent = RedirectComponent(action: action)
         redirectComponent.delegate = self
         self.redirectComponent = redirectComponent
-        DispatchQueue.main.async {
-            let keyWindow = UIApplication.shared.windows.filter {$0.isKeyWindow}.first
-            if var topController = keyWindow?.rootViewController {
-                while let presentedViewController = topController.presentedViewController {
-                    topController = presentedViewController
-                }
-                redirectComponent.viewController.modalPresentationStyle = .fullScreen
-                topController.present(redirectComponent.viewController, animated: true)
-            }
-        }
+        self.presentOnTop(with: redirectComponent)
         self.currentComponent = redirectComponent
     }
     
@@ -506,7 +509,7 @@ class AdyenPayment: RCTEventEmitter {
             self.sendFailure(code : "ERROR_UNKNOWN",message: "Unknown Error")
         }
         currentComponent?.stopLoading(withSuccess: true) { [weak self] in
-            self!.currentComponent?.viewController.dismiss(animated: true) {}
+            self?.currentComponent?.viewController.dismiss(animated: true) {}
         }
         redirectComponent = nil
         threeDS2Component = nil
@@ -525,18 +528,27 @@ class AdyenPayment: RCTEventEmitter {
         self.currentComponent?.viewController.dismiss(animated: true) {}
     }
     
-    @objc func dismiss() {
+    func presentOnTop(with component: PresentableComponent) {
         DispatchQueue.main.async {
-            self.currentComponent?.viewController.dismiss(animated: true) {}
+            let keyWindow = UIApplication.shared.windows.filter {$0.isKeyWindow}.first
+            if var topController = keyWindow?.rootViewController {
+                while let presentedViewController = topController.presentedViewController {
+                    topController = presentedViewController
+                }
+                component.viewController.modalPresentationStyle = .fullScreen
+                topController.present(component.viewController, animated: true)
+            }
         }
     }
 
     @objc func encryptCvv(_ cvv: NSString, publicKey: NSString, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-        let card = CardEncryptor.Card(securityCode: cvv as String)
         do {
+            let card = CardEncryptor.Card(securityCode: cvv as String)
             let encrypted = try CardEncryptor.encryptedCard(for: card, publicKey: publicKey as String)
             resolve(encrypted.securityCode)
-        } catch {}
+        } catch {
+            reject("error", "Failed to encrypt cvv", error)
+        }
     }
 
     private func presentAlert(with error: Error, retryHandler: (() -> Void)? = nil) {

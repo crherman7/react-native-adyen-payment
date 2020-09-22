@@ -11,5 +11,4 @@ RCT_EXTERN_METHOD(handleFingerprintPromise:(NSDictionary *)actionRequest resolve
 RCT_EXTERN_METHOD(handleChallengePromise:(NSDictionary *)actionRequest resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(encryptCvv:(NSString *)cvv publicKey:(NSString *)publicKey resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(setStyle:(NSDictionary *)style)
-RCT_EXTERN_METHOD(dismiss)
 @end

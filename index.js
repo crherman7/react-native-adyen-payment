@@ -80,13 +80,12 @@ export default {
         return AdyenPayment.handleChallengePromise(actionRequest);
     },
     setStyle(style) {
-        return AdyenPayment.setStyle(style);
+        if (Platform.OS === 'ios') {
+            return AdyenPayment.setStyle(style);
+        }
     },
     encryptCvv(cvv, publicKey) {
         return AdyenPayment.encryptCvv(cvv, publicKey);
-    },
-    dismiss(){
-        return AdyenPayment.dismiss();
     },
     /**
      * @callback mOnSuccess
