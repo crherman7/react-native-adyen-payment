@@ -202,15 +202,19 @@ class AdyenPayment: RCTEventEmitter {
     }
     
     func showPayment(_ component: NSString,componentData : NSDictionary,paymentDetails : NSDictionary){
-//        DispatchQueue.main.async {
-//            let rootViewController = UIApplication.shared.delegate?.window??.rootViewController
-//            self.showSpinner(onView: rootViewController!.view)
-//        }
         self.setPaymentDetails(paymentDetails)
         self.componentData = componentData
         self.component = component as String
         let request = PaymentMethodsRequest()
-        AppServiceConfigData.custom_api ? self.resolve?(nil) : self.apiClient.perform(request, completionHandler: self.paymentMethodsResponseHandler)
+        if (AppServiceConfigData.custom_api) {
+            self.resolve?(nil)
+        } else {
+            DispatchQueue.main.async {
+                let rootViewController = UIApplication.shared.delegate?.window??.rootViewController
+                self.showSpinner(onView: rootViewController!.view)
+            }
+            self.apiClient.perform(request, completionHandler: self.paymentMethodsResponseHandler)
+        }
     }
 
     @objc func paymentMethodsResponseHandlerPromise(_ paymentMethodsResponse: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
