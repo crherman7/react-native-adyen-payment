@@ -77,7 +77,7 @@ class AdyenComponentConfiguration : Configuration, Parcelable {
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         super.writeToParcel(dest, flags)
-        dest.writeMap(availableConfigs)
+        dest.writeMap(availableConfigs as Map<*, *>?)
         dest.writeParcelable(serviceComponentName, flags)
         dest.writeParcelable(resultHandlerIntent, flags)
         JsonUtils.writeToParcel(dest, Amount.SERIALIZER.serialize(amount))
