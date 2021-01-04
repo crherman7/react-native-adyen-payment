@@ -202,6 +202,7 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         when(componentType) {
             PaymentMethodTypes.BCMC -> showBCMCComponent(ReactNativeUtils.convertMapToJson(reactComponentData))
             PaymentMethodTypes.SCHEME -> showCardComponent(ReactNativeUtils.convertMapToJson(reactComponentData))
+            PaymentMethodTypes.IDEAL -> showIdealComponent(ReactNativeUtils.convertMapToJson(reactComponentData))
         }
     }
 
