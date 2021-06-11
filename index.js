@@ -32,6 +32,9 @@ export default {
     WECHAT_PAY_SDK,
     APPLE_PAY,
     AFTERPAY,
+    async encryptCardData(formData, publicKey) {
+        return AdyenPayment.encryptCardData(formData, publicKey)
+    },
     initialize(appServiceConfigData){
         return AdyenPayment.initialize(appServiceConfigData);
     },
