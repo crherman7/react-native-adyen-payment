@@ -253,6 +253,53 @@ class AdyenPaymentModule(private var reactContext : ReactApplicationContext) : R
         }
     }
 
+    @ReactMethod
+    fun encryptCardData(formData: ReadableMap, publicKey: String, reactPromise: Promise) {
+        promise = reactPromise
+        try {
+            val formData = ReactNativeUtils.convertMapToJson(formData)
+            val cardNumber = formData.getString("cardNumber")
+            val securityCode = formData.getString("securityCode")
+            val expMonth = formData.getString("expMonth")
+            val expYear = formData.getString("expYear")
+
+            val encryptedCardNumber = Card.Builder().setNumber(cardNumber)
+                    .setGenerationTime(Date())
+                    .build()
+                    .serialize(publicKey)
+
+            val encryptedSecurityCode = Card.Builder().setCvc(securityCode)
+                    .setGenerationTime(Date())
+                    .build()
+                    .serialize(publicKey)
+
+            val encryptedExpiryMonth = Card.Builder().setExpiryMonth(expMonth)
+                    .setGenerationTime(Date())
+                    .build()
+                    .serialize(publicKey)
+
+            val encryptedExpiryYear = Card.Builder().setExpiryYear(expYear)
+                    .setGenerationTime(Date())
+                    .build()
+                    .serialize(publicKey)
+
+
+            val cardJson = WritableNativeMap()
+
+            cardJson.putString("encryptedCardNumber", encryptedCardNumber)
+            cardJson.putString("encryptedSecurityCode", encryptedSecurityCode)
+            cardJson.putString("encryptedExpiryMonth", encryptedExpiryMonth)
+            cardJson.putString("encryptedExpiryYear", encryptedExpiryYear)
+
+            if(promise != null){
+            promise!!.resolve(cardJson)
+            }
+        } catch (e: Error) {
+            promise!!.reject("Error Encrypting Card Data", e)
+        }
+    }
+
+
     fun showPayment(component : String,componentData : ReadableMap,paymentDetails : ReadableMap) {
         paymentData = ReactNativeUtils.convertMapToJson(paymentDetails)
         val compData = ReactNativeUtils.convertMapToJson(componentData)
