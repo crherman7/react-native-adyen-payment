@@ -208,7 +208,7 @@ class AdyenPayment: RCTEventEmitter {
                 let cardObject = CardEncryptor.Card(number: formData["cardNumber"] as? String, securityCode: formData["securityCode"] as? String, expiryMonth: formData["expMonth"] as? String, expiryYear: formData["expYear"] as? String)
                 let encryptedCard = try CardEncryptor.encryptedCard(for: cardObject, publicKey: publicKey as? String ?? "")
                 print(encryptedCard.number)
-                let encryptedCardData:Dictionary? = ["encryptedCardNumber" : encryptedCard.number,"encryptedSecurityCode":encryptedCard.securityCode!,"encryptedExpiryMonth" : encryptedCard.expiryMonth!,"encryptedExpiryYear" : encryptedCard.expiryYear]
+                let encryptedCardData:Dictionary? = ["encryptedCardNumber" : encryptedCard.number,"encryptedSecurityCode":encryptedCard.securityCode,"encryptedExpiryMonth" : encryptedCard.expiryMonth,"encryptedExpiryYear" : encryptedCard.expiryYear]
                 self.resolve?(encryptedCardData)
                 }
                 else {
